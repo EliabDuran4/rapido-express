@@ -12,7 +12,7 @@ import pandas as pd
 from flask import Flask, render_template, request, redirect, url_for
 from werkzeug.utils import secure_filename
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder=os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates"))
 app.secret_key = "rapido_express_secret_2025"
 
 # ── Configuración de rutas ─────────────────────────────────────
