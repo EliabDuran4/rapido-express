@@ -1,0 +1,11 @@
+Dia,Mes,Año,N° Publicacion,Tipo,Contenido / URL,Estilo
+21,Octubre,2025,1,T,"Bienvenidos al Blog de Rápido Express","color:blue; font-size:24px"
+21,Octubre,2025,1,P,"Conoce nuestras nuevas rutas de envío rápido a todo el país.","color:gray;"
+21,Octubre,2025,1,I,"https://placehold.co/800x300/0077cc/white?text=Rapido+Express","width:100%; border-radius:10px;"
+21,Octubre,2025,1,ST,"Opiniones de nuestros clientes","font-weight:bold;"
+21,Octubre,2025,1,P,"Nuestra empresa ha transformado la logística en todo el país con entregas puntuales y seguras.","color:#444; line-height:1.8;"
+21,Octubre,2025,2,T,"Nuevas Rutas 2025","color:#cc0000; font-size:22px;"
+21,Octubre,2025,2,I,"https://placehold.co/800x250/cc0000/white?text=Nuevas+Rutas+2025","width:100%; border-radius:8px;"
+21,Octubre,2025,2,P,"Expandimos nuestra cobertura a 15 nuevas ciudades este año.","color:#333; font-size:16px;"
+21,Octubre,2025,2,ST,"¿Cómo rastrear tu paquete?","color:#0055aa; font-weight:bold;"
+21,Octubre,2025,2,P,"Ingresa tu número de guía en nuestro portal y sigue tu envío en tiempo real.","color:gray;"

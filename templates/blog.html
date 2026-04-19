@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Blog – Rápido Express</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --rojo:   #cc1111;
+      --azul:   #0055cc;
+      --oscuro: #111418;
+      --gris:   #f4f4f5;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--gris);
+      color: #222;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--oscuro);
+      padding: 0 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 64px;
+      position: sticky; top: 0; z-index: 100;
+      box-shadow: 0 2px 16px rgba(0,0,0,.4);
+    }
+    .logo-text {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.8rem;
+      color: #fff;
+      letter-spacing: 2px;
+    }
+    .logo-text span { color: var(--rojo); }
+    .header-actions a {
+      color: #aab4c0;
+      text-decoration: none;
+      font-size: .9rem;
+      transition: color .15s;
+    }
+    .header-actions a:hover { color: white; }
+
+    /* ── Banner ── */
+    .banner {
+      background: linear-gradient(135deg, var(--oscuro) 0%, #1e2d40 100%);
+      color: white;
+      padding: 3rem 2rem 3.5rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .banner::before {
+      content: "";
+      position: absolute; inset: 0;
+      background: repeating-linear-gradient(
+        45deg, transparent, transparent 30px,
+        rgba(255,255,255,.025) 30px, rgba(255,255,255,.025) 60px
+      );
+    }
+    .banner-label {
+      display: inline-block;
+      background: var(--rojo);
+      color: white;
+      font-size: .75rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      padding: .25rem .8rem;
+      border-radius: 4px;
+      margin-bottom: .8rem;
+      position: relative;
+      text-transform: uppercase;
+    }
+    .banner h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      letter-spacing: 3px;
+      position: relative;
+    }
+    .banner p {
+      color: #8899aa;
+      margin-top: .5rem;
+      font-size: .9rem;
+      position: relative;
+    }
+    .banner p code {
+      background: rgba(255,255,255,.1);
+      padding: .1em .4em;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: .85em;
+    }
+
+    /* ── Layout ── */
+    .contenedor {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 2.5rem 1.5rem 5rem;
+    }
+
+    /* ── Publicación card ── */
+    .publicacion {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 2px 20px rgba(0,0,0,.07);
+      margin-bottom: 2.5rem;
+      overflow: hidden;
+      animation: fadeUp .4s ease both;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .pub-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.5rem;
+      background: #fafafa;
+      border-bottom: 1px solid #eee;
+    }
+    .pub-num {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1rem;
+      letter-spacing: 1px;
+      color: #999;
+    }
+    .pub-fecha {
+      font-size: .82rem;
+      color: #aaa;
+    }
+
+    .pub-body {
+      padding: 1.8rem 2rem;
+    }
+
+    /* ── Elementos generados ── */
+    .elemento {
+      margin-bottom: 1.2rem;
+    }
+    .elemento:last-child { margin-bottom: 0; }
+
+    .elemento h1 {
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 700;
+      line-height: 1.25;
+    }
+    .elemento h3 {
+      font-weight: 700;
+      line-height: 1.35;
+    }
+    .elemento p {
+      line-height: 1.75;
+    }
+    .elemento img {
+      display: block;
+      max-width: 100%;
+      height: auto;
+    }
+
+    /* Tipo badge */
+    .tipo-badge {
+      display: inline-block;
+      font-size: .65rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      padding: .1em .4em;
+      border-radius: 3px;
+      color: white;
+      margin-right: .5rem;
+      vertical-align: middle;
+      opacity: .7;
+    }
+    .badge-T   { background: var(--azul); }
+    .badge-ST  { background: #7755cc; }
+    .badge-P   { background: #448844; }
+    .badge-I   { background: var(--rojo); }
+
+    /* ── Sin publicaciones ── */
+    .empty {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: #aaa;
+    }
+    .empty .icon { font-size: 3rem; }
+
+    /* ── Upload again bar ── */
+    .subir-otro {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 2rem;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+      padding: .65rem 1.5rem;
+      border-radius: 8px;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 700;
+      font-size: .9rem;
+      cursor: pointer;
+      border: 2px solid #ddd;
+      background: white;
+      color: var(--azul);
+      text-decoration: none;
+      transition: all .15s;
+    }
+    .btn:hover { border-color: var(--azul); background: #f0f5ff; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo-text">RÁPIDO<span>EXPRESS</span></div>
+  <div class="header-actions">
+    <a href="/">← Volver al portal</a>
+  </div>
+</header>
+
+<div class="banner">
+  <div class="banner-label">Blog Interno</div>
+  <h1>PUBLICACIONES DINÁMICAS</h1>
+  <p>Generado desde: <code>{{ nombre_archivo }}</code></p>
+</div>
+
+<div class="contenedor">
+
+  <div class="subir-otro">
+    <a href="/subir" class="btn">📂 Publicar otra noticia</a>
+  </div>
+
+  {% if publicaciones %}
+    {% for pub in publicaciones %}
+    <article class="publicacion" style="animation-delay: {{ loop.index0 * 0.1 }}s">
+
+      <div class="pub-header">
+        <span class="pub-num">PUBLICACIÓN #{{ pub.meta.num }}</span>
+        <span class="pub-fecha">
+          {% if pub.meta.dia %}{{ pub.meta.dia }} {% endif %}
+          {% if pub.meta.mes %}{{ pub.meta.mes }} {% endif %}
+          {% if pub.meta.anio %}{{ pub.meta.anio }}{% endif %}
+        </span>
+      </div>
+
+      <div class="pub-body">
+        {% for el in pub.elementos %}
+          <div class="elemento">
+
+            {% if el.tipo == "imagen" %}
+              {# --- IMAGEN --- #}
+              <img
+                src="{{ el.contenido }}"
+                alt="{{ el.alt }}"
+                style="{{ el.estilo }}"
+                onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
+              />
+              <div style="display:none; padding:.8rem; background:#fff0f0; border-radius:8px; color:#a00; font-size:.85rem;">
+                ⚠️ No se pudo cargar la imagen: <code>{{ el.contenido }}</code>
+              </div>
+
+            {% else %}
+              {# --- TEXTO (h1, h3, p) --- #}
+              <{{ el.tag }} style="{{ el.estilo }}">{{ el.contenido }}</{{ el.tag }}>
+            {% endif %}
+
+          </div>
+        {% endfor %}
+
+        {% if pub.elementos | length == 0 %}
+          <p style="color:#aaa; font-style:italic;">Esta publicación no tiene elementos reconocidos.</p>
+        {% endif %}
+      </div>
+
+    </article>
+    {% endfor %}
+
+  {% else %}
+    <div class="empty">
+      <div class="icon">📭</div>
+      <p>No se encontraron publicaciones para mostrar.</p>
+    </div>
+  {% endif %}
+
+</div>
+
+</body>
+</html>

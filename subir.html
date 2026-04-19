@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Rápido Express — Publicar Noticia</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --rojo:   #cc1111;
+      --azul:   #0055cc;
+      --oscuro: #111418;
+      --gris:   #f2f3f5;
+      --borde:  #e2e4e8;
+    }
+    body { font-family: 'DM Sans', sans-serif; background: var(--gris); min-height: 100vh; }
+
+    header {
+      background: var(--oscuro);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 2rem; height: 64px;
+      box-shadow: 0 2px 20px rgba(0,0,0,.5);
+    }
+    .logo { font-family: 'Bebas Neue', sans-serif; font-size: 1.7rem; color: #fff;
+            letter-spacing: 2px; text-decoration: none; }
+    .logo span { color: var(--rojo); }
+    .btn-back { color: #aab4c0; text-decoration: none; font-size: .9rem; transition: color .15s; }
+    .btn-back:hover { color: white; }
+
+    /* ── Hero compacto ── */
+    .subhero {
+      background: linear-gradient(135deg, var(--oscuro), #1c2d40);
+      padding: 2.5rem 2rem 3rem;
+      text-align: center; color: white; position: relative; overflow: hidden;
+    }
+    .subhero::before {
+      content: "";
+      position: absolute; inset: 0;
+      background: repeating-linear-gradient(45deg, transparent, transparent 30px,
+        rgba(255,255,255,.02) 30px, rgba(255,255,255,.02) 60px);
+    }
+    .subhero h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.5rem; letter-spacing: 2px; position: relative;
+    }
+    .subhero p { color: #8899aa; margin-top: .4rem; position: relative; font-size: .95rem; }
+
+    /* ── Layout ── */
+    .layout {
+      max-width: 960px; margin: 0 auto;
+      padding: 2.5rem 1.5rem 5rem;
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 2rem;
+      align-items: start;
+    }
+    @media (max-width: 720px) {
+      .layout { grid-template-columns: 1fr; }
+    }
+
+    /* ── Card ── */
+    .card {
+      background: white; border-radius: 16px;
+      box-shadow: 0 2px 20px rgba(0,0,0,.08);
+      padding: 2rem;
+    }
+    .card h2 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.5rem; letter-spacing: 1px;
+      color: var(--oscuro); margin-bottom: .3rem;
+    }
+    .card .subtitle { color: #888; font-size: .88rem; margin-bottom: 1.8rem; }
+
+    /* Upload zone */
+    .upload-zone {
+      border: 2.5px dashed var(--borde);
+      border-radius: 12px; padding: 2.8rem 1.5rem;
+      text-align: center; position: relative;
+      cursor: pointer; transition: border-color .2s, background .2s;
+      margin-bottom: 1.2rem;
+    }
+    .upload-zone:hover, .upload-zone.over {
+      border-color: var(--azul); background: #f0f5ff;
+    }
+    .upload-zone input[type="file"] {
+      position: absolute; inset: 0;
+      opacity: 0; cursor: pointer; width: 100%; height: 100%;
+    }
+    .upload-icon { font-size: 2.8rem; margin-bottom: .5rem; }
+    .upload-zone p { color: #444; font-size: .95rem; }
+    .upload-zone small { display: block; color: #aaa; margin-top: .4rem; font-size: .8rem; }
+    #file-name { font-weight: 700; color: var(--azul); margin-top: .5rem; font-size: .9rem; min-height: 1.2em; }
+
+    /* Botón principal */
+    .btn-submit {
+      width: 100%; padding: .8rem;
+      background: var(--rojo); color: white;
+      border: none; border-radius: 8px;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 700; font-size: 1rem;
+      cursor: pointer; transition: opacity .15s, transform .1s;
+    }
+    .btn-submit:hover { opacity: .88; transform: translateY(-1px); }
+
+    /* Alert */
+    .alert-error {
+      background: #fff0f0; border-left: 4px solid var(--rojo);
+      border-radius: 8px; padding: .9rem 1.2rem;
+      color: #a00; font-size: .9rem; margin-bottom: 1.2rem;
+    }
+
+    /* ── Sidebar instrucciones ── */
+    .sidebar h3 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.2rem; letter-spacing: 1px;
+      color: var(--oscuro); margin-bottom: 1rem;
+    }
+    table { width: 100%; border-collapse: collapse; font-size: .84rem; }
+    th { background: var(--oscuro); color: white; padding: .55rem .9rem; text-align: left; }
+    td { padding: .5rem .9rem; border-bottom: 1px solid var(--borde); }
+    tr:last-child td { border-bottom: none; }
+    tr:nth-child(even) td { background: #fafafa; }
+    code {
+      background: #eef2ff; color: var(--azul);
+      padding: .1em .35em; border-radius: 4px;
+      font-family: monospace; font-size: .88em;
+    }
+
+    .tip-box {
+      background: #f0fff4; border: 1px solid #b8e0c8;
+      border-radius: 10px; padding: 1rem 1.2rem;
+      margin-top: 1.2rem; font-size: .85rem; color: #155724;
+    }
+    .tip-box strong { display: block; margin-bottom: .4rem; }
+  </style>
+</head>
+<body>
+
+<header>
+  <a class="logo" href="/">RÁPIDO<span>EXPRESS</span></a>
+  <a href="/" class="btn-back">← Volver al portal</a>
+</header>
+
+<div class="subhero">
+  <h1>PUBLICAR NOTICIA</h1>
+  <p>Sube tu archivo Excel o CSV y aparecerá automáticamente en el portal</p>
+</div>
+
+<div class="layout">
+
+  <!-- Formulario -->
+  <div class="card">
+    <h2>CARGAR ARCHIVO</h2>
+    <p class="subtitle">Formatos aceptados: .csv · .xlsx · .xls · .txt — máx. 5 MB</p>
+
+    {% if error %}
+    <div class="alert-error">⚠️ {{ error }}</div>
+    {% endif %}
+
+    <form action="/subir" method="POST" enctype="multipart/form-data" id="upload-form">
+      <div class="upload-zone" id="drop-zone">
+        <input type="file" name="archivo" id="file-input"
+               accept=".csv,.xlsx,.xls,.txt" required />
+        <div class="upload-icon">📂</div>
+        <p>Arrastra tu archivo aquí<br>o haz clic para seleccionar</p>
+        <small>.csv · .xlsx · .xls · .txt</small>
+        <div id="file-name"></div>
+      </div>
+      <button type="submit" class="btn-submit">🚀 Publicar en el portal</button>
+    </form>
+  </div>
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="card">
+      <h3>📋 Columnas requeridas</h3>
+      <table>
+        <thead>
+          <tr><th>Columna</th><th>Descripción</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>Dia</code></td><td>Día de publicación</td></tr>
+          <tr><td><code>Mes</code></td><td>Mes de publicación</td></tr>
+          <tr><td><code>Año</code></td><td>Año</td></tr>
+          <tr><td><code>N° Publicacion</code></td><td>Número de publicación</td></tr>
+          <tr><td><code>Tipo</code> ⚠️</td><td>T / P / ST / I</td></tr>
+          <tr><td><code>Contenido / URL</code> ⚠️</td><td>Texto o URL de imagen</td></tr>
+          <tr><td><code>Estilo</code> ⚠️</td><td>CSS inline aplicado</td></tr>
+        </tbody>
+      </table>
+
+      <table style="margin-top:1rem;">
+        <thead><tr><th>Tipo</th><th>Genera</th></tr></thead>
+        <tbody>
+          <tr><td><code>T</code></td><td>Título <code>&lt;h1&gt;</code></td></tr>
+          <tr><td><code>ST</code></td><td>Subtítulo <code>&lt;h3&gt;</code></td></tr>
+          <tr><td><code>P</code></td><td>Párrafo <code>&lt;p&gt;</code></td></tr>
+          <tr><td><code>I</code></td><td>Imagen <code>&lt;img&gt;</code></td></tr>
+        </tbody>
+      </table>
+
+      <div class="tip-box">
+        <strong>💡 Tip</strong>
+        La primera fila con Tipo <code>T</code> se usará como título de la tarjeta en el portal.
+        La primera imagen <code>I</code> será la portada de la noticia.
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const input = document.getElementById('file-input');
+  const label = document.getElementById('file-name');
+  const zone  = document.getElementById('drop-zone');
+
+  input.addEventListener('change', () => {
+    label.textContent = input.files[0]?.name || '';
+  });
+  zone.addEventListener('dragover',  e => { e.preventDefault(); zone.classList.add('over'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('over'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault(); zone.classList.remove('over');
+    if (e.dataTransfer.files.length) {
+      input.files = e.dataTransfer.files;
+      label.textContent = e.dataTransfer.files[0].name;
+    }
+  });
+</script>
+
+</body>
+</html>

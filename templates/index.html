@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Rápido Express — Portal de Noticias</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --rojo:   #cc1111;
+      --azul:   #0055cc;
+      --oscuro: #111418;
+      --gris:   #f2f3f5;
+      --borde:  #e2e4e8;
+      --text:   #1a1d23;
+      --muted:  #6b7280;
+    }
+
+    body { font-family: 'DM Sans', sans-serif; background: var(--gris); color: var(--text); }
+
+    /* ── Header ── */
+    header {
+      background: var(--oscuro);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 2rem;
+      height: 64px;
+      position: sticky; top: 0; z-index: 100;
+      box-shadow: 0 2px 20px rgba(0,0,0,.5);
+    }
+    .logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.7rem;
+      color: #fff;
+      letter-spacing: 2px;
+      text-decoration: none;
+    }
+    .logo span { color: var(--rojo); }
+    .header-nav { display: flex; gap: .5rem; align-items: center; }
+    .btn-nav {
+      padding: .5rem 1.1rem;
+      border-radius: 6px;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 700;
+      font-size: .85rem;
+      cursor: pointer;
+      border: none;
+      text-decoration: none;
+      transition: opacity .15s, transform .1s;
+      display: inline-flex; align-items: center; gap: .4rem;
+    }
+    .btn-nav:hover { opacity: .88; transform: translateY(-1px); }
+    .btn-primary { background: var(--rojo); color: white; }
+    .btn-ghost   { background: rgba(255,255,255,.1); color: white; }
+
+    /* ── Hero ── */
+    .hero {
+      background: linear-gradient(135deg, var(--oscuro) 0%, #1c2d40 100%);
+      color: white;
+      padding: 3.5rem 2rem 4rem;
+      text-align: center;
+      position: relative; overflow: hidden;
+    }
+    .hero::before {
+      content: "";
+      position: absolute; inset: 0;
+      background: repeating-linear-gradient(45deg,
+        transparent, transparent 40px,
+        rgba(255,255,255,.025) 40px, rgba(255,255,255,.025) 80px);
+    }
+    .hero-badge {
+      display: inline-block;
+      background: var(--rojo);
+      color: white;
+      font-size: .72rem; font-weight: 700; letter-spacing: 2px;
+      padding: .25rem .9rem; border-radius: 20px;
+      margin-bottom: .9rem; position: relative;
+      text-transform: uppercase;
+    }
+    .hero h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(2.5rem, 6vw, 4rem);
+      letter-spacing: 3px; position: relative;
+    }
+    .hero p {
+      color: #8899aa; margin-top: .5rem;
+      font-size: 1rem; position: relative;
+    }
+
+    /* ── Alertas ── */
+    .alertas { max-width: 1100px; margin: 1.5rem auto 0; padding: 0 1.5rem; }
+    .alert {
+      padding: .9rem 1.2rem; border-radius: 10px;
+      font-size: .9rem; margin-bottom: .8rem;
+      display: flex; align-items: center; gap: .6rem;
+    }
+    .alert-error  { background: #fff0f0; border-left: 4px solid var(--rojo); color: #a00; }
+    .alert-exito  { background: #f0fff4; border-left: 4px solid #22aa55; color: #155724; }
+
+    /* ── Grid de noticias ── */
+    .contenedor {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 2.5rem 1.5rem 5rem;
+    }
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.8rem;
+    }
+    .section-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.6rem;
+      letter-spacing: 1px;
+      color: var(--oscuro);
+    }
+    .count-badge {
+      background: var(--oscuro);
+      color: white;
+      font-size: .78rem;
+      font-weight: 700;
+      padding: .2rem .7rem;
+      border-radius: 20px;
+      margin-left: .6rem;
+    }
+
+    /* ── Cards grid ── */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .card {
+      background: white;
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 2px 16px rgba(0,0,0,.07);
+      display: flex; flex-direction: column;
+      transition: transform .2s, box-shadow .2s;
+      animation: fadeUp .35s ease both;
+      text-decoration: none; color: inherit;
+    }
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 32px rgba(0,0,0,.13);
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Imagen de portada */
+    .card-img {
+      width: 100%; height: 180px;
+      object-fit: cover;
+      background: linear-gradient(135deg, #1a2d40, #0055cc);
+      display: block;
+    }
+    .card-img-placeholder {
+      width: 100%; height: 180px;
+      background: linear-gradient(135deg, var(--oscuro), #1e3a5a);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 3rem;
+    }
+
+    /* Contenido de la card */
+    .card-body { padding: 1.3rem 1.4rem; flex: 1; display: flex; flex-direction: column; }
+
+    .card-meta {
+      display: flex; align-items: center; gap: .5rem;
+      margin-bottom: .7rem;
+    }
+    .chip {
+      font-size: .7rem; font-weight: 700; letter-spacing: 1px;
+      padding: .15rem .6rem; border-radius: 4px;
+      text-transform: uppercase;
+    }
+    .chip-fecha { background: #eef2ff; color: var(--azul); }
+    .chip-nuevo { background: #fff0f0; color: var(--rojo); }
+
+    .card-titulo {
+      font-weight: 700;
+      font-size: 1.05rem;
+      line-height: 1.35;
+      color: var(--text);
+      margin-bottom: .6rem;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .card-resumen {
+      font-size: .88rem;
+      color: var(--muted);
+      line-height: 1.65;
+      flex: 1;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    /* Footer de la card */
+    .card-footer {
+      padding: .9rem 1.4rem;
+      border-top: 1px solid var(--borde);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: .5rem;
+    }
+    .btn-leer {
+      display: inline-flex; align-items: center; gap: .4rem;
+      background: var(--rojo); color: white;
+      padding: .45rem 1rem; border-radius: 6px;
+      font-size: .82rem; font-weight: 700;
+      text-decoration: none;
+      transition: opacity .15s;
+    }
+    .btn-leer:hover { opacity: .85; }
+    .btn-eliminar {
+      background: none; border: 1px solid #ddd;
+      color: #aaa; font-size: .78rem;
+      padding: .4rem .8rem; border-radius: 6px;
+      cursor: pointer; transition: all .15s;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .btn-eliminar:hover { border-color: var(--rojo); color: var(--rojo); }
+
+    /* ── Estado vacío ── */
+    .empty {
+      grid-column: 1 / -1;
+      text-align: center; padding: 5rem 2rem;
+      background: white; border-radius: 14px;
+      box-shadow: 0 2px 12px rgba(0,0,0,.05);
+    }
+    .empty .icon { font-size: 4rem; margin-bottom: 1rem; }
+    .empty h3 { color: var(--oscuro); margin-bottom: .5rem; }
+    .empty p  { color: var(--muted); margin-bottom: 1.5rem; font-size: .95rem; }
+    .btn-empty {
+      display: inline-flex; align-items: center; gap: .5rem;
+      background: var(--rojo); color: white;
+      padding: .7rem 1.6rem; border-radius: 8px;
+      font-weight: 700; text-decoration: none;
+      transition: opacity .15s;
+    }
+    .btn-empty:hover { opacity: .88; }
+  </style>
+</head>
+<body>
+
+<header>
+  <a class="logo" href="/">RÁPIDO<span>EXPRESS</span></a>
+  <nav class="header-nav">
+    <a href="/" class="btn-nav btn-ghost">🏠 Portal</a>
+    <a href="/subir" class="btn-nav btn-primary">+ Publicar noticia</a>
+  </nav>
+</header>
+
+<div class="hero">
+  <div class="hero-badge">Portal Interno</div>
+  <h1>NOTICIAS Y COMUNICADOS</h1>
+  <p>Publicaciones generadas desde archivos Excel o CSV</p>
+</div>
+
+<div class="alertas">
+  {% if error %}
+  <div class="alert alert-error">⚠️ {{ error }}</div>
+  {% endif %}
+  {% if exito %}
+  <div class="alert alert-exito">✅ ¡Publicación subida con éxito! Ya aparece en el portal.</div>
+  {% endif %}
+</div>
+
+<div class="contenedor">
+  <div class="section-header">
+    <div>
+      <span class="section-title">PUBLICACIONES</span>
+      <span class="count-badge">{{ publicaciones | length }}</span>
+    </div>
+    <a href="/subir" class="btn-nav btn-primary" style="text-decoration:none; padding:.55rem 1.2rem;">
+      + Nueva publicación
+    </a>
+  </div>
+
+  <div class="grid">
+    {% if publicaciones %}
+      {% for pub in publicaciones %}
+      <div class="card" style="animation-delay: {{ loop.index0 * 0.06 }}s">
+
+        {# Imagen de portada #}
+        {% if pub.imagen_url %}
+          <img class="card-img" src="{{ pub.imagen_url }}"
+               alt="Portada de {{ pub.titulo }}"
+               onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+          <div class="card-img-placeholder" style="display:none;">📰</div>
+        {% else %}
+          <div class="card-img-placeholder">📰</div>
+        {% endif %}
+
+        <div class="card-body">
+          <div class="card-meta">
+            {% if pub.fecha_pub %}
+            <span class="chip chip-fecha">📅 {{ pub.fecha_pub }}</span>
+            {% endif %}
+            {% if loop.index <= 2 %}
+            <span class="chip chip-nuevo">🔴 Reciente</span>
+            {% endif %}
+          </div>
+          <div class="card-titulo">{{ pub.titulo }}</div>
+          {% if pub.resumen %}
+          <div class="card-resumen">{{ pub.resumen }}</div>
+          {% endif %}
+        </div>
+
+        <div class="card-footer">
+          <a href="/noticia/{{ pub.archivo }}" class="btn-leer">
+            Leer más →
+          </a>
+          {% if pub.archivo != 'ejemplo.csv' %}
+          <form action="/eliminar/{{ pub.archivo }}" method="POST"
+                onsubmit="return confirm('¿Eliminar esta publicación?')">
+            <button type="submit" class="btn-eliminar">🗑 Eliminar</button>
+          </form>
+          {% endif %}
+        </div>
+
+      </div>
+      {% endfor %}
+
+    {% else %}
+      <div class="empty">
+        <div class="icon">📭</div>
+        <h3>Aún no hay publicaciones</h3>
+        <p>Sube tu primer archivo Excel o CSV para comenzar.</p>
+        <a href="/subir" class="btn-empty">+ Publicar primera noticia</a>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+</body>
+</html>
