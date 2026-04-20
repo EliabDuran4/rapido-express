@@ -1,6 +1,6 @@
 """
-Rápido Express — Portal de Noticias
-Práctica 2: Generación Dinámica de Contenido desde Excel/CSV
+Rapido Express - Portal de Noticias
+Practica 2: Generacion Dinamica de Contenido desde Excel/CSV
 """
 
 import os
@@ -12,29 +12,34 @@ import pandas as pd
 from flask import Flask, render_template, request, redirect, url_for
 from werkzeug.utils import secure_filename
 
-app = Flask(__name__, template_folder=os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates"))
-app.secret_key = "rapido_express_secret_2025"
-
-# ── Configuración de rutas ─────────────────────────────────────
+# Rutas absolutas — funcionan igual en local y en Render
 BASE_DIR       = os.path.dirname(os.path.abspath(__file__))
+TEMPLATE_DIR   = os.path.join(BASE_DIR, "templates")
 UPLOAD_FOLDER  = os.path.join(BASE_DIR, "uploads")
 DATA_FOLDER    = os.path.join(BASE_DIR, "data")
 META_FILE      = os.path.join(BASE_DIR, "data", "publicaciones.json")
 
-ALLOWED_EXTENSIONS     = {"csv", "xlsx", "xls", "txt"}
+app = Flask(__name__, template_folder=TEMPLATE_DIR)
+app.secret_key = "rapido_express_2025"
+
+ALLOWED_EXTENSIONS = {"csv", "xlsx", "xls", "txt"}
 app.config["UPLOAD_FOLDER"]      = UPLOAD_FOLDER
 app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024  # 5 MB
 
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-os.makedirs(DATA_FOLDER,   exist_ok=True)
+# Crear carpetas si no existen (importante en Render)
+for carpeta in [UPLOAD_FOLDER, DATA_FOLDER]:
+    try:
+        os.makedirs(carpeta, exist_ok=True)
+    except Exception as e:
+        print(f"[AVISO] No se pudo crear {carpeta}: {e}")
 
 
 # ══════════════════════════════════════════════════════════════
 # PERSISTENCIA — publicaciones.json
 # ══════════════════════════════════════════════════════════════
 
-def cargar_meta() -> list:
-    """Lee el JSON con el registro de todas las publicaciones subidas."""
+def cargar_meta():
+    """Lee el JSON con el registro de todas las publicaciones."""
     if not os.path.exists(META_FILE):
         return []
     try:
@@ -44,17 +49,17 @@ def cargar_meta() -> list:
         return []
 
 
-def guardar_meta(meta: list):
-    """Escribe el registro de publicaciones en el JSON."""
-    with open(META_FILE, "w", encoding="utf-8") as f:
-        json.dump(meta, f, ensure_ascii=False, indent=2)
+def guardar_meta(meta):
+    """Guarda el registro de publicaciones en el JSON."""
+    try:
+        with open(META_FILE, "w", encoding="utf-8") as f:
+            json.dump(meta, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        print(f"[AVISO] guardar_meta: {e}")
 
 
-def registrar_publicacion(nombre_archivo: str, df: pd.DataFrame):
-    """
-    Extrae título, imagen y resumen del DataFrame y lo guarda en el JSON.
-    Si el archivo ya está registrado, actualiza su entrada.
-    """
+def registrar_publicacion(nombre_archivo, df):
+    """Registra o actualiza una publicacion en el JSON."""
     meta       = cargar_meta()
     titulo     = extraer_titulo(df)
     imagen_url = extraer_primera_imagen(df)
@@ -83,17 +88,20 @@ def registrar_publicacion(nombre_archivo: str, df: pd.DataFrame):
 
 
 # ══════════════════════════════════════════════════════════════
-# FUNCIONES DE EXTRACCIÓN
+# FUNCIONES DE LECTURA Y EXTRACCION
 # ══════════════════════════════════════════════════════════════
 
-def archivo_permitido(nombre: str) -> bool:
+def archivo_permitido(nombre):
     return "." in nombre and nombre.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-def leer_archivo(ruta: str):
+def leer_archivo(ruta):
     ext = ruta.rsplit(".", 1)[1].lower()
     try:
-        df = pd.read_csv(ruta, encoding="utf-8") if ext in ("csv", "txt") else pd.read_excel(ruta)
+        if ext in ("csv", "txt"):
+            df = pd.read_csv(ruta, encoding="utf-8")
+        else:
+            df = pd.read_excel(ruta)
         df.columns = df.columns.str.strip()
         return df.fillna("")
     except Exception as e:
@@ -101,34 +109,34 @@ def leer_archivo(ruta: str):
         return None
 
 
-def validar_columnas(df: pd.DataFrame):
+def validar_columnas(df):
     requeridas  = {"tipo", "contenido / url", "estilo"}
     columnas_df = {c.lower() for c in df.columns}
     faltantes   = requeridas - columnas_df
     if faltantes:
-        return False, f"Faltan columnas: {', '.join(faltantes)}"
+        return False, "Faltan columnas obligatorias: " + ", ".join(faltantes)
     return True, ""
 
 
-def normalizar_col(df: pd.DataFrame, posibles: list):
+def normalizar_col(df, posibles):
     for col in df.columns:
         if col.strip().lower() in [p.lower() for p in posibles]:
             return col
     return None
 
 
-def extraer_titulo(df: pd.DataFrame) -> str:
+def extraer_titulo(df):
     col_tipo = normalizar_col(df, ["tipo"])
     col_cont = normalizar_col(df, ["contenido / url", "contenido/url", "contenido", "url"])
     if not col_tipo or not col_cont:
-        return "Sin título"
+        return "Sin titulo"
     for _, fila in df.iterrows():
         if str(fila[col_tipo]).strip().upper() == "T":
             return str(fila[col_cont]).strip()[:120]
-    return "Sin título"
+    return "Sin titulo"
 
 
-def extraer_primera_imagen(df: pd.DataFrame) -> str:
+def extraer_primera_imagen(df):
     col_tipo = normalizar_col(df, ["tipo"])
     col_cont = normalizar_col(df, ["contenido / url", "contenido/url", "contenido", "url"])
     if not col_tipo or not col_cont:
@@ -141,7 +149,7 @@ def extraer_primera_imagen(df: pd.DataFrame) -> str:
     return ""
 
 
-def extraer_resumen(df: pd.DataFrame) -> str:
+def extraer_resumen(df):
     col_tipo = normalizar_col(df, ["tipo"])
     col_cont = normalizar_col(df, ["contenido / url", "contenido/url", "contenido", "url"])
     if not col_tipo or not col_cont:
@@ -153,10 +161,10 @@ def extraer_resumen(df: pd.DataFrame) -> str:
     return ""
 
 
-def extraer_fecha(df: pd.DataFrame) -> str:
-    col_dia  = normalizar_col(df, ["dia", "día"])
+def extraer_fecha(df):
+    col_dia  = normalizar_col(df, ["dia", "dia"])
     col_mes  = normalizar_col(df, ["mes"])
-    col_anio = normalizar_col(df, ["año", "anio", "year"])
+    col_anio = normalizar_col(df, ["ano", "anio", "year"])
     partes = []
     if col_dia  and str(df.iloc[0][col_dia]).strip():  partes.append(str(df.iloc[0][col_dia]).strip())
     if col_mes  and str(df.iloc[0][col_mes]).strip():  partes.append(str(df.iloc[0][col_mes]).strip())
@@ -164,7 +172,7 @@ def extraer_fecha(df: pd.DataFrame) -> str:
     return " ".join(partes) if partes else datetime.now().strftime("%d/%m/%Y")
 
 
-def generar_elementos_html(df: pd.DataFrame) -> list:
+def generar_elementos_html(df):
     col_tipo = normalizar_col(df, ["tipo"])
     col_cont = normalizar_col(df, ["contenido / url", "contenido/url", "contenido", "url"])
     col_est  = normalizar_col(df, ["estilo", "style"])
@@ -181,17 +189,17 @@ def generar_elementos_html(df: pd.DataFrame) -> list:
             elementos.append({"tag": "p",   "contenido": contenido, "estilo": estilo, "tipo": "texto"})
         elif tipo == "I":
             elementos.append({"tag": "img", "contenido": contenido, "estilo": estilo,
-                               "tipo": "imagen", "alt": "Imagen de Rápido Express"})
+                               "tipo": "imagen", "alt": "Imagen Rapido Express"})
         else:
             print(f"[AVISO] Tipo desconocido ignorado: '{tipo}'")
     return elementos
 
 
-def obtener_publicaciones_de_archivo(df: pd.DataFrame) -> list:
-    col_pub  = normalizar_col(df, ["n° publicacion", "n° publicación", "publicacion", "publicación", "num publicacion"])
-    col_dia  = normalizar_col(df, ["dia", "día"])
+def obtener_publicaciones_de_archivo(df):
+    col_pub  = normalizar_col(df, ["n publicacion", "publicacion", "num publicacion"])
+    col_dia  = normalizar_col(df, ["dia"])
     col_mes  = normalizar_col(df, ["mes"])
-    col_anio = normalizar_col(df, ["año", "anio", "year"])
+    col_anio = normalizar_col(df, ["ano", "anio", "year"])
     publicaciones = []
     grupos = df.groupby(df[col_pub], sort=False) if col_pub else [(1, df)]
     for num_pub, grupo in grupos:
@@ -209,31 +217,43 @@ def obtener_publicaciones_de_archivo(df: pd.DataFrame) -> list:
 
 @app.route("/")
 def portal():
-    """Portal principal — muestra TODAS las noticias como tarjetas."""
-    publicaciones = cargar_meta()
+    """Portal principal — muestra todas las noticias como tarjetas."""
+    try:
+        publicaciones = cargar_meta()
+        registrados   = {p["archivo"] for p in publicaciones}
 
-    # Registrar el CSV de ejemplo si aún no está en el JSON
-    ejemplo_ruta = os.path.join(DATA_FOLDER, "ejemplo.csv")
-    registrados  = {p["archivo"] for p in publicaciones}
-    if os.path.exists(ejemplo_ruta) and "ejemplo.csv" not in registrados:
-        df_ej = leer_archivo(ejemplo_ruta)
-        if df_ej is not None:
-            registrar_publicacion("ejemplo.csv", df_ej)
-            publicaciones = cargar_meta()
+        # Registrar CSV de ejemplo si no esta en el JSON
+        ejemplo_ruta = os.path.join(DATA_FOLDER, "ejemplo.csv")
+        if os.path.exists(ejemplo_ruta) and "ejemplo.csv" not in registrados:
+            df_ej = leer_archivo(ejemplo_ruta)
+            if df_ej is not None:
+                registrar_publicacion("ejemplo.csv", df_ej)
+                publicaciones = cargar_meta()
+                registrados   = {p["archivo"] for p in publicaciones}
 
-    # Registrar también CSVs pre-cargados en /uploads que no estén en el JSON
-    for nombre in os.listdir(UPLOAD_FOLDER):
-        if nombre not in registrados and archivo_permitido(nombre):
-            ruta_up = os.path.join(UPLOAD_FOLDER, nombre)
-            df_up   = leer_archivo(ruta_up)
-            if df_up is not None:
-                valido, _ = validar_columnas(df_up)
-                if valido:
-                    registrar_publicacion(nombre, df_up)
-    publicaciones = cargar_meta()
+        # Registrar CSVs en uploads que no esten en el JSON
+        if os.path.isdir(UPLOAD_FOLDER):
+            for nombre in os.listdir(UPLOAD_FOLDER):
+                if nombre.startswith("."):
+                    continue
+                if nombre not in registrados and archivo_permitido(nombre):
+                    try:
+                        df_up = leer_archivo(os.path.join(UPLOAD_FOLDER, nombre))
+                        if df_up is not None:
+                            valido, _ = validar_columnas(df_up)
+                            if valido:
+                                registrar_publicacion(nombre, df_up)
+                    except Exception as e:
+                        print(f"[AVISO] {nombre}: {e}")
 
-    error  = request.args.get("error", "")
-    exito  = request.args.get("exito", "")
+        publicaciones = cargar_meta()
+
+    except Exception as e:
+        print(f"[ERROR portal] {e}")
+        publicaciones = []
+
+    error = request.args.get("error", "")
+    exito = request.args.get("exito", "")
     return render_template("portal.html",
                            publicaciones=publicaciones,
                            error=error,
@@ -247,26 +267,32 @@ def subir():
         return render_template("subir.html", error="")
 
     if "archivo" not in request.files:
-        return render_template("subir.html", error="No se encontró ningún archivo.")
+        return render_template("subir.html", error="No se encontro ningun archivo.")
 
     archivo = request.files["archivo"]
     if archivo.filename == "":
-        return render_template("subir.html", error="No seleccionaste ningún archivo.")
+        return render_template("subir.html", error="No seleccionaste ningun archivo.")
     if not archivo_permitido(archivo.filename):
-        return render_template("subir.html", error="Extensión no permitida. Usa .csv, .xlsx o .txt")
+        return render_template("subir.html", error="Extension no permitida. Usa .csv, .xlsx o .txt")
 
     nombre_seguro = secure_filename(archivo.filename)
     ruta_guardado = os.path.join(UPLOAD_FOLDER, nombre_seguro)
-    archivo.save(ruta_guardado)
+
+    try:
+        archivo.save(ruta_guardado)
+    except Exception as e:
+        return render_template("subir.html", error=f"No se pudo guardar el archivo: {e}")
 
     df = leer_archivo(ruta_guardado)
     if df is None:
-        os.remove(ruta_guardado)
+        try: os.remove(ruta_guardado)
+        except: pass
         return render_template("subir.html", error="No se pudo leer el archivo.")
 
     valido, msg = validar_columnas(df)
     if not valido:
-        os.remove(ruta_guardado)
+        try: os.remove(ruta_guardado)
+        except: pass
         return render_template("subir.html", error=msg)
 
     registrar_publicacion(nombre_seguro, df)
@@ -274,7 +300,7 @@ def subir():
 
 
 @app.route("/noticia/<nombre_archivo>")
-def ver_noticia(nombre_archivo: str):
+def ver_noticia(nombre_archivo):
     """Muestra el contenido completo de una noticia."""
     nombre_seguro = secure_filename(nombre_archivo)
     ruta = os.path.join(UPLOAD_FOLDER, nombre_seguro)
@@ -291,9 +317,9 @@ def ver_noticia(nombre_archivo: str):
     if not valido:
         return redirect(url_for("portal", error=msg))
 
-    publicaciones  = obtener_publicaciones_de_archivo(df)
-    todas          = cargar_meta()
-    meta_noticia   = next((p for p in todas if p["archivo"] == nombre_seguro), {})
+    publicaciones = obtener_publicaciones_de_archivo(df)
+    todas         = cargar_meta()
+    meta_noticia  = next((p for p in todas if p["archivo"] == nombre_seguro), {})
 
     return render_template("blog.html",
                            publicaciones=publicaciones,
@@ -302,12 +328,13 @@ def ver_noticia(nombre_archivo: str):
 
 
 @app.route("/eliminar/<nombre_archivo>", methods=["POST"])
-def eliminar_noticia(nombre_archivo: str):
+def eliminar_noticia(nombre_archivo):
     """Elimina una noticia del portal."""
     nombre_seguro = secure_filename(nombre_archivo)
     ruta = os.path.join(UPLOAD_FOLDER, nombre_seguro)
     if os.path.exists(ruta):
-        os.remove(ruta)
+        try: os.remove(ruta)
+        except: pass
     meta = [p for p in cargar_meta() if p["archivo"] != nombre_seguro]
     guardar_meta(meta)
     return redirect(url_for("portal"))
